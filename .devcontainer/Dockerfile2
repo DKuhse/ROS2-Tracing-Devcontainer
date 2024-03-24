@@ -26,38 +26,14 @@ RUN apt-get update && \
     curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-# install ROS2 dependencies
-RUN apt-get update && apt-get install -y \
-    python3-flake8-docstrings \
-    python3-pip \
-    python3-pytest-cov \
-    python3-flake8-blind-except \
-    python3-flake8-builtins \
-    python3-flake8-class-newline \
-    python3-flake8-comprehensions \
-    python3-flake8-deprecated \
-    python3-flake8-import-order \
-    python3-flake8-quotes \
-    python3-pytest-repeat \
-    python3-pytest-rerunfailures \
-    python3-vcstool \
-    python3-rosdep \
-    ros-dev-tools
-
 # install ROS2
-RUN mkdir -p /home/vscode/ros2_humble/src
+RUN apt-get update && \
+    apt-get install -y ros-humble-desktop
 
-WORKDIR /home/vscode/ros2_humble
+# install ROS2 development tools
+RUN apt-get -y install python3-pip python3-colcon-common-extensions
 
-RUN vcs import --input https://raw.githubusercontent.com/ros2/ros2/humble/ros2.repos src && \
-    sudo rosdep init && \
-    rosdep update && \
-    apt-get update && \
-    apt-get -y upgrade
-
-RUN rosdep install --rosdistro humble --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers" && \
-    colcon build --symlink-install
-
+# --- Install ROS2 tracing ---
 
 # install ROS2 tracing
 RUN apt-get install -y lttng-tools liblttng-ust-dev && \
@@ -77,13 +53,11 @@ RUN mkdir -p /home/vscode/ros2_tracing_ws/src/tracetools_analysis && \
     git clone -b humble https://github.com/ros-tracing/tracetools_analysis.git /home/vscode/ros2_tracing_ws/src/tracetools_analysis
 
 # build ROS2 tracing
-RUN cd /home/vscode/ros2_tracing_ws &&\ 
-    . /home/vscode/ros2_humble/install/setup.sh &&\
+RUN cd /home/vscode/ros2_tracing_ws &&\
+    . /opt/ros/humble/setup.sh &&\
     colcon build --symlink-install --allow-overriding tracetools
 
 RUN pip install bokeh jupyter
-
-RUN sudo apt install expect -y
 
 # --- Set up user ---
 
@@ -91,7 +65,7 @@ RUN sudo apt install expect -y
 USER vscode
 
 # source ROS2 setup file
-RUN echo '. /home/vscode/ros2_humble/install/setup.sh' >> /home/vscode/.bashrc
+RUN echo '. /opt/ros/humble/setup.sh' >> /home/vscode/.bashrc
 
 # source ROS2 tracing setup file
 RUN echo '. /home/vscode/ros2_tracing_ws/install/setup.sh' >> /home/vscode/.bashrc

@@ -22,6 +22,11 @@
 	"customizations": {
 		"extensions": [
 			"llvm-vs-code-extensions.vscode-clangd"
-		]
+		],
+		"vscode": {
+			"extensions": [
+				"ms-toolsai.jupyter"
+			]
+		}
 	}
 }
