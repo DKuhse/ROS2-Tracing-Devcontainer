@@ -1,8 +1,47 @@
 # trace the program multiple times
 
-for i in {1..30}
+# parse command line arguments
+iteration_count=30
+time_in_seconds=30
+package="multi_test"
+executable="tester"
+session_name="main"
+
+while getopts "n:t:p:e:s:" opt; do
+    case $opt in
+        n)
+            iteration_count=$OPTARG
+            ;;
+        t)
+            time_in_seconds=$OPTARG
+            ;;
+        p)
+            package=$OPTARG
+            ;;
+        e)
+            executable=$OPTARG
+            ;;
+        s)
+            session_name=$OPTARG
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# validate arguments
+if [[ -z $iteration_count || -z $time_in_seconds ]]; then
+    echo "Missing arguments. Usage: $0 -n <iteration_count> -t <time_in_seconds> [-p <package>] [-e <executable>] [-s <session_name>]"
+    exit 1
+fi
+
+# rest of the code
+for ((i = 1; i <= $iteration_count; i++))
 do
-    echo "Test $i"
-    ./test_and_trace.sh -t 30 -p multi_test -e tester main_$i
-    echo "Test $i done"
+        echo "Test $i"
+        ./test_and_trace.sh -t $time_in_seconds -p $package -e $executable $session_name_$i
+        echo "Test $i done"
+        sleep 10
 done

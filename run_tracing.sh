@@ -37,6 +37,10 @@ else
     session_name='session_'$session_id
 fi
 
+
+
+
+
 # get the current path and append traces
 path=$(pwd)'/traces/'
 
@@ -47,7 +51,7 @@ then
 else    
     # execute above expect script
     expect -c "
-      spawn ros2 trace -p $path -s $session_name -u 'tracepoints.callback_start', 'rcl_init'
+      spawn ros2 trace -p $path -s $session_name -u ros2:rcl_init ros2:rcl_node_init ros2:rmw_publisher_init ros2:rcl_publisher_init ros2:rmw_subscription_init ros2:rcl_subscription_init ros2:rclcpp_subscription_init ros2:rcl_service_init ros2:rcl_lifecycle_state_machine_init ros2:rclcpp_timer_link_node ros2:rcl_client_init ros2:rcl_timer_init ros2:rclcpp_callback_register ros2:rclcpp_timer_callback_added ros2:rclcpp_service_callback_added ros2:callback_start ros2:callback_end
       expect \"press enter to start...\"
       send \"\r\"
       puts \"\nStarting tracing...\"
