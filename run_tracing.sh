@@ -47,7 +47,7 @@ then
 else    
     # execute above expect script
     expect -c "
-      spawn ros2 trace -p $path -s $session_name
+      spawn ros2 trace -p $path -s $session_name -u 'tracepoints.callback_start', 'rcl_init'
       expect \"press enter to start...\"
       send \"\r\"
       puts \"\nStarting tracing...\"
