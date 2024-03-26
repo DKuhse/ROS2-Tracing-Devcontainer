@@ -110,6 +110,23 @@ def plot_data(data_util, callback_symbol, output_path):
     duration.legend.label_text_font_size = '11px'
     duration.xaxis[0].formatter = DatetimeTickFormatter(seconds='%Ss')
 
+    # draw a line at the mean and maximum
+    mean = duration_df['diff_in_ms'].mean()
+    duration.line(
+        x=[duration_df['timestamp'].iloc[0], duration_df['timestamp'].iloc[-1]],
+        y=[mean, mean],
+        line_width=2,
+        line_color='black',
+        line_dash='dashed',
+    )
+    duration.line(
+        x=[duration_df['timestamp'].iloc[0], duration_df['timestamp'].iloc[-1]],
+        y=[duration_df['diff_in_ms'].max(), duration_df['diff_in_ms'].max()],
+        line_width=2,
+        line_color='red',
+        line_dash='dashed',
+    )
+
     # export to html
     output_file(filename=output_path, title='Callback start delta')
 

@@ -41,7 +41,13 @@ fi
 for ((i = 1; i <= $iteration_count; i++))
 do
         echo "Test $i"
-        ./test_and_trace.sh -t $time_in_seconds -p $package -e $executable $session_name_$i
+        ./test_and_trace.sh -t $time_in_seconds -p $package -e $executable ${session_name}_$i
         echo "Test $i done"
-        sleep 10
+        sleep 15
+done
+
+# output the results
+for ((i = 1; i <= $iteration_count; i++))
+do
+        python3 /home/vscode/workspace/analysis/eval_trace.py --path /home/vscode/workspace/traces/session_${session_name}_$i --output_path /home/vscode/workspace/output/${session_name}_$i.html
 done

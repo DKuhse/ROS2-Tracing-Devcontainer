@@ -34,7 +34,6 @@ To automatically start the executable and trace at the same time
 
 Evaluate it multiple times
 
-
 >./eval.sh -n <iteration_count> -t <time_in_seconds> [-p <package>] [-e <executable>] [-s <session_name>]
 
 

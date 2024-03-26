@@ -47,7 +47,7 @@ source ./run_tracing.sh -t $time $session_id &
 
 source ./packages/install/setup.sh
 
-sleep 3
+sleep 5
 
 # execute the package and executable, suppress output, terminate the process after the given time
 timeout $time ros2 run $package $executable
