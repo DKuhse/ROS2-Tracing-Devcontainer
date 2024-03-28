@@ -10,7 +10,7 @@ colcon build --symlink-install
 
 cd ~/workspace
 
-./eval.sh -n 1 -t 300 -s unfixed_var1
+./eval.sh -n 3 -t 300 -s unfixed_var1
 
 cd packages/rclcpp_multi_test
 
@@ -24,4 +24,4 @@ colcon build --symlink-install
 
 cd ~/workspace
 
-./eval.sh -n 1 -t 300 -s fixed_var1
+./eval.sh -n 3 -t 300 -s fixed_var1
