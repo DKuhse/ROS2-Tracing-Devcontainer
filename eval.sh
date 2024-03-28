@@ -49,5 +49,5 @@ done
 # output the results
 for ((i = 1; i <= $iteration_count; i++))
 do
-        python3 /home/vscode/workspace/analysis/eval_trace.py --path /home/vscode/workspace/traces/session_${session_name}_$i --output_path /home/vscode/workspace/output/${session_name}_$i.html
+        python3 /home/vscode/workspace/analysis/eval_trace.py --path /home/vscode/workspace/traces/session_${session_name}_$i --output_path /home/vscode/workspace/output/${session_name}_$i/
 done

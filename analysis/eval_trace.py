@@ -19,6 +19,8 @@ from tracetools_analysis.utils.ros2 import Ros2DataModelUtil
 
 from numpy import timedelta64
 
+import os
+
 
 
 def setup_tracetools():
@@ -35,102 +37,59 @@ def setup_tracetools():
 
 def parse_events_and_evaluate(path, output_path):
     
-    data_util, callback_symbols = parse_events(path)
+    callback_dfs = parse_events(path)
 
-    # plot difference between starts of callbacks
+    # create output path if it does not exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
-    callback_symbol = list(callback_symbols.items())[0]
+    # dump to pickle
+    for callback_id, df in callback_dfs.items():
+        df.to_pickle(f"{output_path}/{callback_id}.pkl")
 
-    plot_data(data_util, callback_symbol, output_path)
+    # write .describe() to file
+    with open(f"{output_path}/describe.txt", "w") as f:
+        for callback_id, df in callback_dfs.items():
+            f.write(f"{callback_id}\n")
+            f.write(f"{df.describe()}\n\n")
+
 
 def parse_events(path):
     # Load the trace
     events = load_file(path)
 
-    # Create a handler
-    handler = Ros2Handler().process(events)
+    callback_dfs = {}
 
-    data_util = Ros2DataModelUtil(handler.data)
+    for event in events:
+        if "_name" in event:
+            if event["_name"] == "ros2:callback_start":
+                timestamp = event["_timestamp"]
 
-    callback_symbols = data_util.get_callback_symbols()
-    return data_util,callback_symbols
+                callback_id = event["callback"]
 
-def plot_data(data_util, callback_symbol, output_path):
-    psize = 450
-    colours = ['#29788E', '#DD4968', '#410967']
+                if callback_id not in callback_dfs:
+                    callback_dfs[callback_id] = []
 
-    earliest_date = None
-    obj, symbol = callback_symbol
-    duration_df = data_util.get_callback_durations(obj)
-    thedate = duration_df.loc[:, 'timestamp'].iloc[0]
-    if earliest_date is None or thedate <= earliest_date:
-        earliest_date = thedate
+                callback_dfs[callback_id].append({
+                    "timestamp": timestamp
+                })
 
-    starttime = earliest_date.strftime('%Y-%m-%d %H:%M')
+    for callback_id, df in callback_dfs.items():
+        df = pd.DataFrame(df)
 
-    duration = figure(
-        title='Callback start delta',
-        x_axis_label=f'start ({starttime})',
-        y_axis_label='time since start (ms)',
-        width=psize, height=psize,
-    )
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-    colour_i = 0
-    # Filter out internal subscriptions
-    owner_info = data_util.get_callback_owner_info(obj)
-    
-    # remnant of loop
-    # if not owner_info or '/parameter_events' in owner_info:
-    #     continue
+        callback_dfs[callback_id] = df
 
-    duration_df = data_util.get_callback_durations(obj)
+    for callback_id, df in callback_dfs.items():
+        df["delta"] = df["timestamp"].diff()
+        df["delta"] = df["delta"].fillna(pd.Timedelta(seconds=0))
+        # to ms
+        df["delta"] = df["delta"].dt.total_seconds() * 1000
 
-    # sort by timestamp
-    duration_df = duration_df.sort_values(by='timestamp')
+        callback_dfs[callback_id] = df
 
-    # calculate time since previous start
-    duration_df['delta'] = duration_df['timestamp'].diff()
-    duration_df['delta'] = duration_df['delta'].fillna(timedelta64(0))
-    duration_df['diff'] = duration_df['delta'] - duration_df['duration'].shift(1)
-    duration_df['diff'] = duration_df['diff'].dt.total_seconds()
-    duration_df['diff_in_ms'] = duration_df['diff'] * 1000 # convert to ms
-    duration_df
-
-    source = ColumnDataSource(duration_df)
-    duration.title.align = 'center'
-    duration.line(
-        x='timestamp',
-        y='diff_in_ms',
-        legend_label=str(symbol),
-        line_width=2,
-        source=source,
-        line_color=colours[colour_i],
-    )
-    colour_i += 1
-    duration.legend.label_text_font_size = '11px'
-    duration.xaxis[0].formatter = DatetimeTickFormatter(seconds='%Ss')
-
-    # draw a line at the mean and maximum
-    mean = duration_df['diff_in_ms'].mean()
-    duration.line(
-        x=[duration_df['timestamp'].iloc[0], duration_df['timestamp'].iloc[-1]],
-        y=[mean, mean],
-        line_width=2,
-        line_color='black',
-        line_dash='dashed',
-    )
-    duration.line(
-        x=[duration_df['timestamp'].iloc[0], duration_df['timestamp'].iloc[-1]],
-        y=[duration_df['diff_in_ms'].max(), duration_df['diff_in_ms'].max()],
-        line_width=2,
-        line_color='red',
-        line_dash='dashed',
-    )
-
-    # export to html
-    output_file(filename=output_path, title='Callback start delta')
-
-    save(duration)
+    return callback_dfs
 
 
 def main():
